@@ -1,0 +1,15 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'styles/delete_template.css' %}">
+
+<form action="" method="POST">
+  {% csrf_token %}
+  <p>Bạn có chắc muốn xoá khách sạn "{{hotel.hotel_name}}"</p>
+  <a href="{% url 'manage-hotel' %}" class="button">Quay lại</a>
+  <input type="submit" value="Xác nhận">
+</form>
+
+{% endblock %}

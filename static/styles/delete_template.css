@@ -1,0 +1,59 @@
+/* static/styles/delete_confirm.css */
+
+form {
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 500px;
+}
+
+p {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+a.button {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: normal;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #ffcc00;
+  color: #fff;
+  text-decoration: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+  width: 120px;
+  height: 40px;
+  text-align: center;
+  line-height: 22px; /* Căn giữa theo chiều dọc */
+  vertical-align: middle; /* Căn giữa theo chiều ngang */
+}
+
+a.button,
+input[type="submit"] {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #ffcc00;
+  color: #fff;
+  text-decoration: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+  width: 120px; /* Điều chỉnh kích thước của nút Confirm */
+  height: 40px; /* Điều chỉnh chiều cao của nút Confirm */
+  margin-bottom: 28px;
+
+  text-align: center; /* Căn giữa nội dung trong nút Confirm */
+  vertical-align: middle; /* Căn chỉnh đúng vị trí giữa hai phần tử */
+}
+
+a.button:hover,
+input[type="submit"]:hover {
+  background-color: #f9b700;
+}
+
+/* Rest of your styles */
