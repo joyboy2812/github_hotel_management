@@ -14,8 +14,13 @@
         <li><a href="{% url 'home' %}">Trang chủ</a></li>
         {% if request.user.profile.role.role_name == 'admin' %}
          <li><a href="{% url 'manage-hotel' %}">Quản lý khách sạn</a></li>
-         <li><a href="#">Quản lý phòng</a></li>
+         <li><a href="{% url 'select-hotel' %}">Quản lý phòng</a></li>
          <li><a href="#">Quản lý người dùng</a></li>
+        {% elif request.user.profile.role.role_name == 'manager' %}
+         <li><a href="{% url 'select-hotel' %}">Quản lý phòng</a></li>
+         <li><a href="#">Quản lý nhân viên</a></li>
+        {% elif request.user.profile.role.role_name == 'staff' %}
+         <li><a href="{% url 'select-hotel' %}">Quản lý phòng</a></li>
         {% endif %}
         {% if request.user.is_authenticated %}
         <li><a href="{% url 'logout' %}">Đăng xuất</a></li>

@@ -1,0 +1,38 @@
+{% extends 'main.html' %}
+
+{% block content %}
+
+<section class="manage-hotels">
+    <h2>Quản lý phòng khách sạn {{ hotel.hotel_name }}</h2>
+    <div class="toolbar">
+      <a href="{% url 'create-room' hotel.id %}" class="button">Thêm phòng</a>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Tên phòng</th>
+          <th>Loại phòng</th>
+          <th>Trạng thái</th>
+          <th>Giá phòng</th>
+          <th>Quản lý</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for room in rooms %}
+        <tr>
+          <th>{{room.room_number}}</th>
+          <td>{{room.type.type_name}}</td>
+          <td>{{room.status}}</td>
+          <td>{{room.price}}</td>
+          <td>
+            <a href="{% url 'update-room' hotel.id room.id %}" class="button">Sửa</a>
+            <a href="{% url 'delete-room' hotel.id room.id %}" class="button">Xoá</a>
+          </td>
+        </tr>
+      {% endfor %}
+        <!-- Thêm các hàng khác tương tự -->
+      </tbody>
+    </table>
+  </section>
+
+{% endblock %}
