@@ -15,9 +15,8 @@ def has_admin_role(user):
 @user_passes_test(has_admin_role, login_url='login')
 def manage_hotel(request):
     hotels = Hotel.objects.all()
-    role = 'admin'
+
     context = {
-        'role': role,
         'hotels': hotels,
     }
     return render(request, 'hotels/manage_hotel.html', context)
@@ -27,11 +26,9 @@ def manage_hotel(request):
 @user_passes_test(has_admin_role, login_url='login')
 def create_hotel(request):
     form = HotelForm()
-    role = 'admin'
 
     context = {
         'form': form,
-        'role': role
     }
 
     if request.method == 'POST':
@@ -48,11 +45,9 @@ def create_hotel(request):
 def update_hotel(request, pk):
     hotel = Hotel.objects.get(id=pk)
     form = HotelForm(instance=hotel)
-    role = 'admin'
 
     context = {
         'form': form,
-        'role': role,
     }
 
     if request.method == 'POST':
@@ -68,10 +63,8 @@ def update_hotel(request, pk):
 @user_passes_test(has_admin_role, login_url='login')
 def delete_hotel(request, pk):
     hotel = Hotel.objects.get(id=pk)
-    role = 'admin'
 
     context = {
-        'role': role,
         'hotel': hotel,
     }
 
