@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'hotels.apps.HotelsConfig',
     'users.apps.UsersConfig',
     'rooms.apps.RoomsConfig',
+
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -133,6 +135,12 @@ MEDIA_URL = '/images/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
+
+MIGRATION_MODULES = {
+    'hotels': 'migrations.hotels_migrations',
+    'users': 'migrations.users_migrations',
+    'rooms': 'migrations.rooms_migrations',
+}
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'static/images')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
