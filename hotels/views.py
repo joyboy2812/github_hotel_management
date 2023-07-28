@@ -1,75 +1,62 @@
-from django.shortcuts import render, redirect
 from .models import Hotel
-from .forms import HotelForm
-from django.contrib.auth.decorators import login_required, user_passes_test
+from rest_framework.decorators import api_view, permission_classes
+from permissions.custom_permissions import IsAdminUser
+from rest_framework.response import Response
+from .serializers import HotelSerializer
 
 
 # Create your views here.
 
 
-def has_admin_role(user):
-    return user.profile.role.role_name == 'admin'
-
-
-@login_required(login_url='login')
-@user_passes_test(has_admin_role, login_url='login')
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
 def manage_hotel(request):
-    hotels = Hotel.objects.all()
-
-    context = {
-        'hotels': hotels,
-    }
-    return render(request, 'hotels/manage_hotel.html', context)
+    if request.method == 'GET':
+        hotels = Hotel.objects.all()
+        serializer = HotelSerializer(hotels, many=True)
+        return Response(serializer.data)
 
 
-@login_required(login_url='login')
-@user_passes_test(has_admin_role, login_url='login')
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
 def create_hotel(request):
-    form = HotelForm()
-
-    context = {
-        'form': form,
-    }
-
     if request.method == 'POST':
-        form = HotelForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('manage-hotel')
+        serializer = HotelSerializer(data=request.data)
+        if serializer.is_valid():
+            # Kiểm tra xem có khách sạn nào đã có cùng tên chưa
+            hotel_name = serializer.validated_data['hotel_name']
+            if Hotel.objects.filter(hotel_name=hotel_name).exists():
+                return Response({'error': 'Khách sạn đã tồn tại'}, status=400)
 
-    return render(request, 'hotels/hotel_form.html', context)
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
 
 
-@login_required(login_url='login')
-@user_passes_test(has_admin_role, login_url='login')
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
 def update_hotel(request, pk):
-    hotel = Hotel.objects.get(id=pk)
-    form = HotelForm(instance=hotel)
+    try:
+        hotel = Hotel.objects.get(pk=pk)
+    except Hotel.DoesNotExist:
+        return Response({'error': 'Không tìm thấy khách sạn'}, status=404)
 
-    context = {
-        'form': form,
-    }
-
-    if request.method == 'POST':
-        form = HotelForm(request.POST, instance=hotel)
-        if form.is_valid():
-            form.save()
-            return redirect('manage-hotel')
-
-    return render(request, 'hotels/hotel_form.html', context)
+    if request.method == 'PUT':
+        serializer = HotelSerializer(hotel, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
 
 
-@login_required(login_url='login')
-@user_passes_test(has_admin_role, login_url='login')
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
 def delete_hotel(request, pk):
-    hotel = Hotel.objects.get(id=pk)
+    try:
+        hotel = Hotel.objects.get(pk=pk)
+    except Hotel.DoesNotExist:
+        return Response({'error': 'Không tìm thấy khách sạn'}, status=404)
 
-    context = {
-        'hotel': hotel,
-    }
-
-    if request.method == 'POST':
+    if request.method == 'DELETE':
         hotel.delete()
-        return redirect('manage-hotel')
-
-    return render(request, 'hotels/delete_template.html', context)
+        return Response({'message': 'Xóa khách sạn thành công'}, status=204)
