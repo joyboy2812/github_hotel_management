@@ -23,9 +23,9 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('hotels/', include('hotels.urls')),
-    path('rooms/', include('rooms.urls')),
-    path('', include('users.urls')),
+    path('api/hotels/', include('hotels.urls')),
+    path('api/rooms/', include('rooms.urls')),
+    path('api/users/', include('users.urls')),
 
     path('reset_password/', auth_views.PasswordResetView.as_view(), name='reset_password'),
 
