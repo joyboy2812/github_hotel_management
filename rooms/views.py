@@ -4,7 +4,7 @@ from .models import Room
 from .forms import RoomForm
 from django.contrib import messages
 from rest_framework.decorators import api_view, permission_classes
-from permissions.custom_permissions import IsAdminUser
+from permissions.custom_permissions import IsAdminUser, IsManagerUser, IsStaffUser
 from rest_framework.response import Response
 from .serializers import RoomSerializer
 
@@ -13,12 +13,13 @@ from .serializers import RoomSerializer
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser | IsManagerUser | IsStaffUser])
 def manage_room(request, pk):
+    print(request.user.username)
     try:
         hotel = Hotel.objects.get(id=pk)
     except Hotel.DoesNotExist:
-        return Response({'error': 'Không tìm thấy khách sạn'}, status=404)
+        return Response({'error': 'Can not find room'}, status=404)
 
     if request.method == 'GET':
         rooms = hotel.room_set.all()
@@ -27,12 +28,12 @@ def manage_room(request, pk):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser | IsManagerUser | IsStaffUser])
 def create_room(request, pk):
     try:
         hotel = Hotel.objects.get(pk=pk)
     except Hotel.DoesNotExist:
-        return Response({'error': 'Không tìm thấy khách sạn'}, status=404)
+        return Response({'error': 'Can not find room'}, status=404)
 
     if request.method == 'POST':
         serializer = RoomSerializer(data=request.data)
@@ -48,7 +49,7 @@ def create_room(request, pk):
 
 
 @api_view(['PUT'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser | IsManagerUser | IsStaffUser])
 def update_room(request, pk):
     try:
         room = Room.objects.get(pk=pk)
@@ -64,7 +65,7 @@ def update_room(request, pk):
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser | IsManagerUser | IsStaffUser])
 def delete_room(request, pk):
     try:
         room = Room.objects.get(pk=pk)
