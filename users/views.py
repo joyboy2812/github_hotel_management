@@ -4,9 +4,8 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
 from .forms import CustomUserCreationForm
-from .models import Profile
+from .models import Profile, Role
 from django.template.loader import render_to_string
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -19,11 +18,12 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
-from .serializers import UserSerializer
+from .serializers import UserSerializer, ProfileSerializer, CreateStaffSerializer, UpdateProfileSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from django.conf import settings
+from permissions.custom_permissions import IsAdminUser, IsManagerUser
 
 
 # Create your views here.
@@ -130,3 +130,88 @@ def logout_user(request):
         return Response({"message": "Đăng xuất thành công."}, status=200)
     except Exception as e:
         return Response({"message": "Đăng xuất thất bại."}, status=400)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser | IsManagerUser])
+def manage_profile(request):
+    if request.user.profile.role.role_name == 'admin':
+        profiles = Profile.objects.all()
+        serializer = ProfileSerializer(profiles, many=True)
+    elif request.user.profile.role.role_name == 'manager':
+        role = Role.objects.get(role_name='staff')
+        profiles = Profile.objects.filter(role=role)
+        serializer = ProfileSerializer(profiles, many=True)
+    else:
+        return Response({'error': 'You do not have permission to view profile list.'}, status=403)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser | IsManagerUser])
+def create_staff(request):
+    serializer = CreateStaffSerializer(data=request.data)
+    if serializer.is_valid():
+        username = serializer.validated_data['username'].lower()
+        password = serializer.validated_data['password']
+
+        # Kiểm tra xem username đã tồn tại trong hệ thống chưa
+        if User.objects.filter(username=username).exists():
+            return Response({'error': 'Username already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Tạo user mới
+        user = User.objects.create_user(username=username, password=password)
+        profile = Profile.objects.get(user=user)
+        staff_role = Role.objects.get(role_name='staff')
+        profile.role = staff_role
+        profile.save()
+
+        # Response
+        return Response({'message': 'Staff user created successfully.'}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser | IsManagerUser])
+def update_profile(request, pk):
+    try:
+        profile = Profile.objects.get(id=pk)
+    except Profile.DoesNotExist:
+        return Response({"message": "Profile not found"}, status=404)
+
+        # Check if the request contains 'username' and 'role_name' fields
+    if 'username' not in request.data or 'role_name' not in request.data:
+        return Response({"message": "Username and role_name fields are required"}, status=400)
+
+    new_username = request.data['username']
+
+    try:
+        # Check if the new username is unique
+        if User.objects.filter(username=new_username).exists():
+            return Response({"message": "Username already exists"}, status=400)
+
+        # Update User's username
+        profile.user.username = new_username
+        profile.user.save()
+
+        # Update Role's role_name
+        profile.role.role_name = request.data['role_name']
+        profile.role.save()
+
+        # Serialize and return updated Profile
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data, status=200)
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser | IsManagerUser])
+def delete_profile(request, pk):
+    try:
+        profile = Profile.objects.get(pk=pk)
+    except Profile.DoesNotExist:
+        return Response({'error': 'Can not find profile'}, status=404)
+
+    profile.delete()
+    return Response({'message': 'Delete success'}, status=204)

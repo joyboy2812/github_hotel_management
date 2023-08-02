@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from .models import Profile, Role
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -20,3 +21,25 @@ class UserSerializer(serializers.ModelSerializer):
 
         user = User.objects.create_user(**validated_data)
         return user
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    role_name = serializers.CharField(source='role.role_name', read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = '__all__'
+
+
+class CreateStaffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+
+class UpdateProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = '__all__'
