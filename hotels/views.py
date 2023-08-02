@@ -11,10 +11,9 @@ from .serializers import HotelSerializer
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def manage_hotel(request):
-    if request.method == 'GET':
-        hotels = Hotel.objects.all()
-        serializer = HotelSerializer(hotels, many=True)
-        return Response(serializer.data)
+    hotels = Hotel.objects.all()
+    serializer = HotelSerializer(hotels, many=True)
+    return Response(serializer.data)
 
 
 @api_view(['POST'])
@@ -57,6 +56,5 @@ def delete_hotel(request, pk):
     except Hotel.DoesNotExist:
         return Response({'error': 'Không tìm thấy khách sạn'}, status=404)
 
-    if request.method == 'DELETE':
-        hotel.delete()
-        return Response({'message': 'Xóa khách sạn thành công'}, status=204)
+    hotel.delete()
+    return Response({'message': 'Xóa khách sạn thành công'}, status=204)

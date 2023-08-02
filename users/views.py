@@ -41,7 +41,7 @@ def activate(request, uidb64, token):
         user.save()
 
         messages.success(request, "Thank you for your email confirmation. Now you can login your account")
-        return redirect('login')
+        return redirect('api-login')
     else:
         messages.error(request, "Activation link is invalid")
 
@@ -100,23 +100,22 @@ def activate_email(request, user, to_email):
 
 @api_view(['POST'])
 def register_user(request):
-    if request.method == 'POST':
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            existing_user = User.objects.filter(email=email).exists()
-            if existing_user:
-                return Response({'error': 'This email is already in use. Please use a different email.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            else:
-                user = serializer.create(serializer.validated_data)
-                user.is_active = False
-                user.username = user.username.lower()
-                user.save()
-                activate_email(request, user, serializer.validated_data.get('email'))
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        existing_user = User.objects.filter(email=email).exists()
+        if existing_user:
+            return Response({'error': 'This email is already in use. Please use a different email.'},
+                            status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            user = serializer.create(serializer.validated_data)
+            user.is_active = False
+            user.username = user.username.lower()
+            user.save()
+            activate_email(request, user, serializer.validated_data.get('email'))
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
