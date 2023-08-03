@@ -15,7 +15,6 @@ from .serializers import RoomSerializer
 @api_view(['GET'])
 @permission_classes([IsAdminUser | IsManagerUser | IsStaffUser])
 def manage_room(request, pk):
-    print(request.user.username)
     try:
         hotel = Hotel.objects.get(id=pk)
     except Hotel.DoesNotExist:
