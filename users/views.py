@@ -58,26 +58,25 @@ def home(request):
 @permission_classes([AllowAny])
 def login_user(request):
 
-    if request.method == 'POST':
-        username = request.data.get('username')
-        password = request.data.get('password')
+    username = request.data.get('username')
+    password = request.data.get('password')
 
-        user = authenticate(request, username=username, password=password)
+    user = authenticate(request, username=username, password=password)
 
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
+    if user is not None:
+        refresh = RefreshToken.for_user(user)
 
-            response_data = {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'expires_in': settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds()
-            }
+        response_data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'expires_in': settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds()
+        }
 
-            login(request, user)
+        login(request, user)
 
-            return Response(response_data)
-        else:
-            return Response({"message": "Invalid credentials"}, status=400)
+        return Response(response_data)
+    else:
+        return Response({"message": "Invalid credentials"}, status=400)
 
 
 def activate_email(request, user, to_email):
