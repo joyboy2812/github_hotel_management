@@ -34,17 +34,16 @@ def create_room(request, pk):
     except Hotel.DoesNotExist:
         return Response({'error': 'Can not find room'}, status=404)
 
-    if request.method == 'POST':
-        serializer = RoomSerializer(data=request.data)
-        if serializer.is_valid():
-            room_number = serializer.validated_data['room_number']
-            existing_room = Room.objects.filter(room_number=room_number, hotel=hotel).exists()
-            if existing_room:
-                return Response({'error': 'This room_number in this hotel is already in use. Please use a different room_number.'}, status=400)
+    serializer = RoomSerializer(data=request.data)
+    if serializer.is_valid():
+        room_number = serializer.validated_data['room_number']
+        existing_room = Room.objects.filter(room_number=room_number, hotel=hotel).exists()
+        if existing_room:
+            return Response({'error': 'This room_number in this hotel is already in use. Please use a different room_number.'}, status=400)
 
-            serializer.save(hotel=hotel)
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+        serializer.save(hotel=hotel)
+        return Response(serializer.data, status=201)
+    return Response(serializer.errors, status=400)
 
 
 @api_view(['PUT'])
