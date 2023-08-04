@@ -13,5 +13,6 @@ urlpatterns = [
     path('manage-profile/', views.manage_profile, name='api-manage-profile'),
     path('create-staff/', views.create_staff, name='api-create-staff'),
     path('update-profile/<int:pk>/', views.update_profile, name='api-update-profile'),
+    path('update-username/<int:pk>/', views.update_username, name='api-update-username'),
     path('delete-profile/<int:pk>/', views.delete_profile, name='api-delete-profile')
 ]
