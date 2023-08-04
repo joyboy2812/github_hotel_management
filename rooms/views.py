@@ -20,10 +20,9 @@ def manage_room(request, pk):
     except Hotel.DoesNotExist:
         return Response({'error': 'Can not find room'}, status=404)
 
-    if request.method == 'GET':
-        rooms = hotel.room_set.all()
-        serializer = RoomSerializer(rooms, many=True)
-        return Response(serializer.data)
+    rooms = hotel.room_set.all()
+    serializer = RoomSerializer(rooms, many=True)
+    return Response(serializer.data)
 
 
 @api_view(['POST'])
@@ -54,12 +53,11 @@ def update_room(request, pk):
     except room.DoesNotExist:
         return Response({'error': 'Can not find room'}, status=404)
 
-    if request.method == 'PUT':
-        serializer = RoomSerializer(room, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=200)
-        return Response(serializer.errors, status=400)
+    serializer = RoomSerializer(room, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=200)
+    return Response(serializer.errors, status=400)
 
 
 @api_view(['DELETE'])
@@ -70,6 +68,5 @@ def delete_room(request, pk):
     except room.DoesNotExist:
         return Response({'error': 'Can not find room'}, status=404)
 
-    if request.method == 'DELETE':
-        room.delete()
-        return Response({'message': 'Xóa khách sạn thành công'}, status=204)
+    room.delete()
+    return Response({'message': 'Xóa khách sạn thành công'}, status=204)
