@@ -23,7 +23,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from django.conf import settings
-from permissions.custom_permissions import IsAdminUser, IsManagerUser
+from permissions.custom_permissions import IsAdminUser, IsManagerUser, IsRegisteredUser
 
 
 # Create your views here.
@@ -203,6 +203,39 @@ def update_profile(request, pk):
         return Response(serializer.data, status=200)
     except Exception as e:
         return Response({"message": str(e)}, status=500)
+
+
+@api_view(['PUT'])
+@permission_classes([IsRegisteredUser])
+def update_username(request, pk):
+    if request.user.profile.id == pk:
+        try:
+            profile = Profile.objects.get(id=pk)
+        except Profile.DoesNotExist:
+            return Response({"message": "Profile not found"}, status=404)
+
+            # Check if the request contains 'username' and 'role_name' fields
+        if 'username' not in request.data:
+            return Response({"message": "Username fields are required"}, status=400)
+
+        new_username = request.data['username']
+
+        try:
+            # Check if the new username is unique
+            if User.objects.filter(username=new_username).exists():
+                return Response({"message": "Username already exists"}, status=400)
+
+            # Update User's username
+            profile.user.username = new_username
+            profile.user.save()
+
+            # Serialize and return updated Profile
+            serializer = ProfileSerializer(profile)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"message": str(e)}, status=500)
+    else:
+        return Response({"message": "You can not change other username"}, status=400)
 
 
 @api_view(['DELETE'])
