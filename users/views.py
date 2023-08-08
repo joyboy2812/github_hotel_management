@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .forms import CustomUserCreationForm
-from .models import Profile, Role
+from .models import Profile, Role, Booking, BookingDetail
 from django.template.loader import render_to_string
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -24,6 +24,8 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from django.conf import settings
 from permissions.custom_permissions import IsAdminUser, IsManagerUser, IsRegisteredUser
+from rooms.models import Room
+from datetime import datetime
 
 
 # Create your views here.
@@ -57,7 +59,6 @@ def home(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
-
     username = request.data.get('username')
     password = request.data.get('password')
 
@@ -247,3 +248,85 @@ def delete_profile(request, pk):
 
     profile.delete()
     return Response({'message': 'Delete success'}, status=204)
+
+
+@api_view(['POST'])
+@permission_classes([IsRegisteredUser])
+def create_booking_detail(request, pk):
+    try:
+        room = Room.objects.get(id=pk)
+    except Room.DoesNotExist:
+        return Response({"message": "Room not found"}, status=404)
+
+    try:
+        booking = request.user.profile.booking_set.get(is_booked=False)
+    except Booking.DoesNotExist:
+        booking = Booking.objects.create(profile=request.user.profile)
+
+    check_in_date_str = request.data.get('check_in_date')
+    check_out_date_str = request.data.get('check_out_date')
+
+    if not check_in_date_str or not check_out_date_str:
+        return Response({'message': 'check_in_date and check_out_date fields are required'}, status=400)
+
+    check_in_date = datetime.strptime(check_in_date_str, '%Y-%m-%d').date()
+    check_out_date = datetime.strptime(check_out_date_str, '%Y-%m-%d').date()
+
+    if check_out_date <= check_in_date:
+        return Response({'message': 'check_out_date must be greater than check_in_date'}, status=400)
+
+    booking_detail = BookingDetail(booking=booking, room=room, check_in_date=check_in_date,
+                                   check_out_date=check_out_date)
+    booking_detail.price = room.price
+    overlapping_booking_details = BookingDetail.objects.filter(
+        room=room,
+        check_in_date__lt=check_out_date,
+        check_out_date__gt=check_in_date,
+        is_booked=True)
+
+    conflicting_booking_details = BookingDetail.objects.filter(
+        booking=booking,
+        room=room,
+        check_in_date__lt=check_out_date,
+        check_out_date__gt=check_in_date,
+    )
+
+    if overlapping_booking_details:
+        return Response({'message': 'This booking period overlaps with existing booking(s)'}, status=400)
+
+    if conflicting_booking_details:
+        return Response({'message': 'You already have booked this room in this period'}, status=400)
+
+    booking_detail.save()
+
+    return Response({'message': 'You have succeed create booking detail. Please save booking to finish your booking'}, status=204)
+
+
+@api_view(['PUT'])
+@permission_classes([IsRegisteredUser])
+def save_booking(request):
+    try:
+        booking = request.user.profile.booking_set.get(is_booked=False)
+    except Booking.DoesNotExist:
+        return Response({'message': 'You have no booking right now'})
+
+    print(booking)
+
+    bookingDetails = booking.bookingdetail_set.all()
+    for booking_detail in bookingDetails:
+        conflicting_booking_details = BookingDetail.objects.filter(
+            room=booking_detail.room,
+            check_in_date__lt=booking_detail.check_out_date,
+            check_out_date__gt=booking_detail.check_in_date,
+            is_booked=True
+        ).exclude(id=booking_detail.id)
+        if conflicting_booking_details:
+            overlap_message = f'This {booking_detail.room} in {booking_detail.check_in_date} and {booking_detail.check_out_date} overlaps with existing booking(s)'
+            return Response({'message': overlap_message}, status=400)
+
+    for booking_detail in bookingDetails:
+        booking_detail.is_booked = True
+        booking_detail.save()
+    booking.is_booked = True
+    booking.save()
+    return Response({'message': 'You have successfully booked'}, status=204)
