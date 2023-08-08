@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Profile, Role
+from .models import Profile, Role, Booking, BookingDetail
+from rooms.serializers import RoomSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -42,4 +43,10 @@ class CreateStaffSerializer(serializers.ModelSerializer):
 class UpdateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
+        fields = '__all__'
+
+
+class BookingDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookingDetail
         fields = '__all__'
