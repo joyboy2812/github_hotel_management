@@ -48,6 +48,6 @@ class BookingDetail(models.Model):
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     price = models.FloatField()
-    check_in_date = models.DateField()
-    check_out_date = models.DateField()
+    check_in_date = models.DateTimeField()
+    check_out_date = models.DateTimeField()
     is_booked = models.BooleanField(default=False)
