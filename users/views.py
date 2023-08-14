@@ -269,8 +269,8 @@ def create_booking_detail(request, pk):
     if not check_in_date_str or not check_out_date_str:
         return Response({'message': 'check_in_date and check_out_date fields are required'}, status=400)
 
-    check_in_date = datetime.strptime(check_in_date_str, '%Y-%m-%d').date()
-    check_out_date = datetime.strptime(check_out_date_str, '%Y-%m-%d').date()
+    check_in_date = datetime.strptime(check_in_date_str, '%Y-%m-%d %H:%M:%S')
+    check_out_date = datetime.strptime(check_out_date_str, '%Y-%m-%d %H:%M:%S')
 
     if check_out_date <= check_in_date:
         return Response({'message': 'check_out_date must be greater than check_in_date'}, status=400)
@@ -299,7 +299,8 @@ def create_booking_detail(request, pk):
 
     booking_detail.save()
 
-    return Response({'message': 'You have succeed create booking detail. Please save booking to finish your booking'}, status=204)
+    return Response({'message': 'You have succeed create booking detail. Please save booking to finish your booking'},
+                    status=204)
 
 
 @api_view(['PUT'])
@@ -309,8 +310,6 @@ def save_booking(request):
         booking = request.user.profile.booking_set.get(is_booked=False)
     except Booking.DoesNotExist:
         return Response({'message': 'You have no booking right now'})
-
-    print(booking)
 
     bookingDetails = booking.bookingdetail_set.all()
     for booking_detail in bookingDetails:
